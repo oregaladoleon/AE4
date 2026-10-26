@@ -1,0 +1,21 @@
+# Entorno local y secretos
+.env
+*.env
+
+# Datos persistentes creados localmente por la app
+/data/
+
+# Cache de Python y Django
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Archivos de entorno virtual si existieran
+.venv/
+venv/
+env/
+
+# Archivos de sistema operativo y editores
+.DS_Store
+.vscode/
+.idea/
