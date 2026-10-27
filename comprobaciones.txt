@@ -39,3 +39,6 @@ docker compose exec -T db psql -U alumno -d travelroad -c 'SELECT count(*) FROM 
     11
 (1 row)
 
+=====Comprobación PgAdmin=====
+curl -sf http://localhost:5050/misc/ping
+PING

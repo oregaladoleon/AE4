@@ -21,7 +21,7 @@ graph TD
 - [Configuración](#configuración)
 - [Comprobación](#comprobación)
 - [Problemas encontrados](#problemas-encontrados)
-- [Enlace al repositorio remoto](#Enlace-al-repositorio-remoto)
+- [Enlace al repositorio remoto](https://github.com/oregaladoleon/AE4.git)
 
 ## Instalación
 Creamos un nuevo repositorio  en la web de **Github** y lo clonamos en nuestro equipo anfitrión dentro del directorio de trabajo **~/dpl/AE4**:
@@ -94,7 +94,7 @@ rm -r .dockerignore
 rm -r index.md 
 ~~~
 
-## Cofiguración
+## Configuración
 
 Se modifica el fichero **compose.yml** de acuerdo a las exigencias del guión de la práctica evaluable, quedando de esta forma:
 
@@ -261,7 +261,7 @@ Ejecutamos el script **deploy.sh**
 ./deploy.sh
 ~~~
 
-## Comprobaciones
+## Comprobación
 
 Se ejecutan los siguientes comandos y sus resultados se añaden al fichero **~/dpl/AE4/comprobaciones.txt
 
@@ -292,5 +292,22 @@ docker compose exec -T db psql -U alumno -d travelroad -c "SELECT count(*) FROM 
 ~~~
 Comprobamos que tras reiniciar los contenedores, los datos no se borran.
 
-## Enlace al repositorio remoto
-Enlace público: https://github.com/oregaladoleon/AE4.git
+Además comprobamos PgAdmin:
+
+~~~bash
+curl -sf http://localhost:5050/misc/ping
+~~~
+
+## Problemas encontrados
+
+1. **Conflicto de nombres de contenedores (Contenedores huérfanos):**
+   - **Problema:** Al desplegar los servicios de la AE4, Docker Compose indicó un conflicto con un contenedor existente (`dpl-django`) procedente de prácticas anteriores.
+   - **Solución:** Se limpiaron los contenedores huérfanos y detenidos utilizando el comando de limpieza automática de Docker:
+
+~~~bash
+docker compose down --remove-orphans
+~~~
+
+2. **Permisos del demonio de Docker (`permission denied`):**
+   - **Problema:** Al ejecutar el script de despliegue, la terminal devolvió un error de permisos al acceder al socket de Docker.
+   - **Solución:** Se ejecutó el script empleando privilegios de superusuario (`sudo ./deploy.sh`).
