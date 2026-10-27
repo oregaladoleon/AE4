@@ -1,0 +1,41 @@
+===== comando sudo docker compose ps =====
+NAME          IMAGE                 COMMAND                  SERVICE   CREATED         STATUS                   PORTS
+dpl-db        postgres:16-alpine    "docker-entrypoint.s…"   db        7 minutes ago   Up 7 minutes (healthy)   5432/tcp
+dpl-django    dpl-app-app           "gunicorn config.wsg…"   app       7 minutes ago   Up 7 minutes (healthy)   8000/tcp
+dpl-nginx     nginx:1.27-alpine     "/docker-entrypoint.…"   nginx     7 minutes ago   Up 6 minutes             0.0.0.0:8000->80/tcp, [::]:8000->80/tcp
+dpl-pgadmin   dpage/pgadmin4:9.17   "/entrypoint.sh"         pgadmin   7 minutes ago   Up 7 minutes (healthy)   443/tcp, 0.0.0.0:5050->80/tcp, [::]:5050->80/tcp
+=====comando curl http://localhost:8000/=====
+<!doctype html>
+<html lang="es">
+<head><meta charset="utf-8"><title>Hola desde el servidor de aplicaciones DPL (UT4)</title></head>
+<body>
+<h1>Hola desde el servidor de aplicaciones DPL (UT4)</h1>
+<p>Contenedor: <strong>1a7366451b4c</strong></p>
+<p>Visitas totales: <strong>1</strong></p>
+</body>
+</html>
+=====comando curl -sf http://localhost:8000/healthz/=====
+{"status": "ok", "hostname": "1a7366451b4c"}
+=====comando docker compose exec -T db psql -U alumno -d travelroad -c 'SELECT count(*) FROM places;'=====
+ count 
+-------
+    11
+(1 row)
+
+=====comando curl -sf http://localhost:8000/api/lugares=====
+{"lugares": [{"id": 1, "name": "Tokio", "visited": false}, {"id": 2, "name": "Budapest", "visited": true}, {"id": 3, "name": "Nairobi", "visited": false}, {"id": 4, "name": "Berl\u00edn", "visited": true}, {"id": 5, "name": "Lisboa", "visited": true}, {"id": 6, "name": "Denver", "visited": false}, {"id": 7, "name": "Mosc\u00fa", "visited": false}, {"id": 8, "name": "Oslo", "visited": false}, {"id": 9, "name": "R\u00edo", "visited": true}, {"id": 10, "name": "Cincinnati", "visited": false}, {"id": 11, "name": "Helsinki", "visited": false}], "total": 11}
+=====Persistencia=====
+docker compose restart app
+ Container dpl-django Restarting 
+ Container dpl-django Started 
+curl -sf http://localhost:8000/healthz
+{"status": "ok", "hostname": "1a7366451b4c"}
+docker compose restart db
+ Container dpl-db Restarting 
+ Container dpl-db Started 
+docker compose exec -T db psql -U alumno -d travelroad -c 'SELECT count(*) FROM places;'
+ count 
+-------
+    11
+(1 row)
+

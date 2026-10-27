@@ -6,12 +6,22 @@
 ## Objetivo
 Desplegar una aplicación Web contenerizada con capa de datos: servidor de aplicaciones Django + Gunicorn, base de datos PostgreSQL administrada con pgAdmin y servidor Web nginx como proxy inverso, todo definido con Docker Compose, verificado con los comandos estándar y desplegable con un deploy.sh.
 
+~~~mermaid
+graph TD
+    Client["Cliente / Navegador"] -->|Puerto 8000| Nginx["Nginx (Proxy Inverso)"]
+    Nginx -->|Red interna| App["App (Django / Gunicorn)"]
+    App -->|Red interna| DB[(PostgreSQL DB)]
+    Browser["Navegador (Usuario)"] -->|Puerto 5050| PgAdmin["pgAdmin"]
+    PgAdmin -->|Red interna| DB
+~~~
+
 ## Índice
 
 - [Instalación](#Instalación)
 - [Configuración](#configuración)
 - [Comprobación](#comprobación)
 - [Problemas encontrados](#problemas-encontrados)
+- [Enlace al repositorio remoto](#Enlace-al-repositorio-remoto)
 
 ## Instalación
 Creamos un nuevo repositorio  en la web de **Github** y lo clonamos en nuestro equipo anfitrión dentro del directorio de trabajo **~/dpl/AE4**:
@@ -192,7 +202,7 @@ services:
   # (frontend/dist) y reenvía /api/ y /healthz al servicio "django".
   # Único puerto publicado al anfitrión: 8000 -> 80.
   nginx:
-    image: nginx1.27-alpine      
+    image: nginx:1.27-alpine      
     container_name: dpl-nginx
     ports:
       - "8000:80"               # anfitrión:contenedor
@@ -209,4 +219,78 @@ volumes:
   pgadmin-data:
 ~~~
 
+Creamos el fichero de script **deploy.sh** con la siguiente configuración:
 
+~~~bash
+cat > ~/dpl/AE4/deploy.sh <<'EOF'
+#!/usr/bin/env bash
+# deploy.sh — reconstruye y verifica el despliegue (curso DPL, UT4).
+set -euo pipefail
+
+echo "== Construyendo imagenes =="
+docker compose build
+
+echo "== Arrancando servicios =="
+docker compose up -d
+
+echo "== Esperando a que /healthz responda 200 =="
+for intento in $(seq 1 30); do
+  if curl -sf http://localhost:8000/healthz >/dev/null; then
+    echo "Despliegue sano tras $intento intento(s)."
+    docker compose ps
+    exit 0
+  fi
+  sleep 2
+done
+
+echo "ERROR: /healthz no respondio en 60 s" >&2
+docker compose logs --tail=20 >&2
+exit 1
+EOF
+~~~
+
+Otorgamos permiso de ejecución:
+
+~~~bash
+chmod +x ~/dpl/ae4/deploy.sh
+~~~
+
+Ejecutamos el script **deploy.sh**
+
+~~~bash
+./deploy.sh
+~~~
+
+## Comprobaciones
+
+Se ejecutan los siguientes comandos y sus resultados se añaden al fichero **~/dpl/AE4/comprobaciones.txt
+
+~~~bash
+docker compose ps
+
+curl http://localhost:8000/            
+
+curl -sf http://localhost:8000/healthz 
+
+docker compose exec -T db psql -U alumno -d travelroad -c "SELECT count(*) FROM places;"
+
+curl -sf http://localhost:8000/api/lugares   
+~~~
+
+Además comprobamos la persistencia de la /app y /db con:
+
+~~~bash
+docker compose restart app
+
+curl -sf http://localhost:8000/healthz 
+
+docker compose restart db
+
+sleep 5
+
+docker compose exec -T db psql -U alumno -d travelroad -c "SELECT count(*) FROM places;"
+~~~
+Comprobamos que tras reiniciar los contenedores, los datos no se borran.
+
+## Enlace al repositorio remoto
+Enlace público: https://github.com/oregaladoleon/AE4.git
