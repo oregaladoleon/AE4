@@ -101,7 +101,7 @@ services:
   # (frontend/dist) y reenvía /api/ y /healthz al servicio "django".
   # Único puerto publicado al anfitrión: 8000 -> 80.
   nginx:
-    image: nginx1.27-alpine      
+    image: nginx:1.27-alpine      
     container_name: dpl-nginx
     ports:
       - "8000:80"               # anfitrión:contenedor
